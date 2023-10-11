@@ -16,7 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from obra import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    #! ruta de la vista general
+    path('', views.home, name='home'),
+    #!Rutas del usuario
+    path('signup/', views.new_usuario, name='new_usuario'),
+    path('signin/', views.autenticar, name='signin'),
 ]
