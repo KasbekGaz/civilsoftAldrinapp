@@ -6,8 +6,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 # Create your views here.
 
-
-# ! Pagina de inicio
+# ! Pagina de dashboard
 def home(request):
     return render(request, 'home.html')
 

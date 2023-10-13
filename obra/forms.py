@@ -5,7 +5,7 @@ from  django.contrib.auth.models import User
 
 class Usuario(UserCreationForm):
     nombre_completo = forms.CharField(max_length=50)
-    email = forms.forms.CharField(max_length=50)
+    email = forms.EmailField(max_length=50)
 
 
     class Meta:
