@@ -22,7 +22,7 @@ def new_usuario(request):
                 user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
                 user.save()
                 login(request, user)
-                return redirect('')
+                return redirect('home')
             except IntegrityError:
                 return render(request, 'registro_Usuario.html', {
                     'form': Usuario,
