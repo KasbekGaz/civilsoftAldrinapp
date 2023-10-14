@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from .forms import Usuario
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
+from django.contrib.auth.decorators import login_required  # *para proteger las rutas
 # Create your views here.
 
 # ! Pagina de home, para el usuario que inicia sesion
@@ -16,7 +17,7 @@ def home(request):
 
 
 def about(request):
-    return render(request, 'info')
+    return render(request, 'about.html')
 
 # ! registro de usuario
 
@@ -62,6 +63,7 @@ def autenticar(request):
 
 
 #! Cerrar sesion usuario
+@login_required
 def closeSesion(request):
     logout(request)
-    return redirect('home')
+    return redirect('about.html')

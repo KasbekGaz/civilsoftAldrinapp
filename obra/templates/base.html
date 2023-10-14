@@ -49,24 +49,34 @@
 
 
     <!-- Aqui esta la navegacion-->
-    <nav class="navbar container">
-        <ul>
-            <li>
-                <a href="{% url 'home' %}">Home</a>
-            </li>
-            <li>
-                <a href="{% url 'new_usuario' %}">Registrarse</a>
-            </li>
-            <li>
-                <a href="{% url 'signin' %}">Iniciar Sesion</a>
-            </li>
-            <li>
-                <a href="{% url 'logout' %}">Cerrar Sesion</a>
-            </li>
-        </ul>
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+        <div class="container-fluid">
+            <div>
+                <ul class="navbar-nav ms-auto">
+                    <li>
+                        <a href="{% url 'info' %}">About</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'new_usuario' %}">Registrarse</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'signin' %}">Iniciar Sesion</a>
+                    </li>
+                    {% if  user.is_authenticated %}
+                    <li>
+                        <a href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'logout' %}">Cerrar Sesion</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </nav>
 
 {% block content %} 
+
 {% endblock %}
 <main>
 
