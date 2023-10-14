@@ -1,16 +1,26 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from .forms import Usuario
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 # Create your views here.
 
-# ! Pagina de dashboard
+# ! Pagina de home, para el usuario que inicia sesion
+
+
 def home(request):
     return render(request, 'home.html')
 
+# ! Pagina de informacion, pagina para el usuario no registrado y no autenticado
+
+
+def about(request):
+    return render(request, 'info')
+
 # ! registro de usuario
+
+
 def new_usuario(request):
     if request.method == 'GET':
         return render(request, 'registro_Usuario.html', {
@@ -18,8 +28,9 @@ def new_usuario(request):
         })
     else:
         if request.POST['password1'] == request.POST['password2']:
-            try: #* Aqui se registra el usuario
-                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+            try:  # * Aqui se registra el usuario
+                user = User.objects.create_user(
+                    username=request.POST['username'], password=request.POST['password1'])
                 user.save()
                 login(request, user)
                 return redirect('home')
@@ -38,15 +49,17 @@ def autenticar(request):
             'form': AuthenticationForm
         })
     else:
-        user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
-        if user is None: #Si el usuario no existe
-                return render(request, 'signin.html',{
-                    'form': AuthenticationForm,
-                    'error': 'Usuario o contraseña incorrecta'
-                })
-        else: #si SI existe lo reenvia a TASKS
+        user = authenticate(
+            request, username=request.POST['username'], password=request.POST['password'])
+        if user is None:  # Si el usuario no existe
+            return render(request, 'inicio_sesion.html', {
+                'form': AuthenticationForm,
+                'error': 'Usuario o contraseña incorrecta'
+            })
+        else:  # si SI existe lo reenvia a TASKS
             login(request, user)
-            return redirect('Tareas') 
+            return redirect('home')
+
 
 #! Cerrar sesion usuario
 def closeSesion(request):

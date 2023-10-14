@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<main class="container-fluid pt-4 px-4">
+    <section class="container-fluid pt-4 px-4">
+        <div class="container-fluid pt-4 px-4">
+            <div class="row vh-100 bg-secondary rounded align-items-center justify-content-center mx-0">
+                <div class="col-md-6 text-center">
+                    <p>Esto es una aplicacion de gestion de control de gastos administrativos, gestion de proveedores y gestion de materiales.
+                    </p>
+                    <div class="text-center">
+                        <a class="btn btn-secundary" href="/signin/">
+                        Iniciar Sesion
+                        </a>
+                        <a class="btn btn-dark" href="{% url 'new_usuario' %}">
+                        Resgistrarse
+                        </a >
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+
+
+{% endblock %}
