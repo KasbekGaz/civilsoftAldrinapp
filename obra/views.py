@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required  # *para proteger las rutas
 # Create your views here.
 
+
 # ! Pagina de home, para el usuario que inicia sesion
 
 
