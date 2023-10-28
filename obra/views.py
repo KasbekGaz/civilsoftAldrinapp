@@ -66,4 +66,4 @@ def autenticar(request):
 @login_required
 def closeSesion(request):
     logout(request)
-    return redirect('about.html')
+    return redirect('home')
