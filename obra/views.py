@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
-from .forms import Usuario
+from django.shortcuts import render
+#! nuevas importaciones:
+from rest_framework.response import Response
+from .serializers import UserRegistrationSerializer, UserLoginSerializer
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import login, logout, authenticate
-from django.db import IntegrityError
-from django.contrib.auth.decorators import login_required  # *para proteger las rutas
 # Create your views here.
 
 
@@ -20,51 +21,45 @@ def home(request):
 def about(request):
     return render(request, 'about.html')
 
-# ! registro de usuario
+#! Registrar usuario
 
 
-def new_usuario(request):
-    if request.method == 'GET':
-        return render(request, 'registro_Usuario.html', {
-            'form': Usuario
-        })
-    else:
-        if request.POST['password1'] == request.POST['password2']:
-            try:  # * Aqui se registra el usuario
-                user = User.objects.create_user(
-                    username=request.POST['username'], password=request.POST['password1'])
-                user.save()
+class UserRegistrationViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({"message": "Usuario registrado exitosamente."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#! Login de usuario
+
+
+class UserLoginViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = authenticate(
+                username=serializer.validated_data['username'],
+                password=serializer.validated_data['password']
+            )
+            if user:
                 login(request, user)
-                return redirect('home')
-            except IntegrityError:
-                return render(request, 'registro_Usuario.html', {
-                    'form': Usuario,
-                    'error': 'Usuario no existe'
-                })
-        return render(request, 'registro_Usuario.html')
+                return Response({'message': 'Inicio de sesión exitoso'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#! Autenticar e incio de sesion del usuario
-def autenticar(request):
-    if request.method == 'GET':
-        return render(request, 'inicio_sesion.html', {
-            'form': AuthenticationForm
-        })
-    else:
-        user = authenticate(
-            request, username=request.POST['username'], password=request.POST['password'])
-        if user is None:  # Si el usuario no existe
-            return render(request, 'inicio_sesion.html', {
-                'form': AuthenticationForm,
-                'error': 'Usuario o contraseña incorrecta'
-            })
-        else:  # si SI existe lo reenvia a TASKS
-            login(request, user)
-            return redirect('home')
+#! Logout de usuario
+class UserLogoutViewSet(viewsets.ViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
-
-#! Cerrar sesion usuario
-@login_required
-def closeSesion(request):
-    logout(request)
-    return redirect('home')
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
+        logout(request)
+        return Response({'message': 'Cierre de sesión exitoso'}, status=status.HTTP_200_OK)

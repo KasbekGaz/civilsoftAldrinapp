@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 # Create your models here.
 
@@ -7,6 +7,8 @@ from django.db.models.signals import post_save
 class Profile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='profile', verbose_name='Usuario')
+    groups = models.ManyToManyField(
+        Group, blank=True, verbose_name='Grupos del Usuario')
     image = models.ImageField(default='users/usuario_defevto.jpg',
                               upload_to='users/', verbose_name='Imagen de perfil')
     correo = models.CharField(
