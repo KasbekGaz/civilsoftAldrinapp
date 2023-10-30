@@ -1,65 +1,40 @@
+from .models import Profile
+from .serializers import PerfilSerializer
 from django.shortcuts import render
-#! nuevas importaciones:
-from rest_framework.response import Response
-from .serializers import UserRegistrationSerializer, UserLoginSerializer
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.authentication import TokenAuthentication
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic.edit import FormView
 from django.contrib.auth import login, logout, authenticate
-# Create your views here.
+from django.http import HttpResponseRedirect
+from django.contrib.auth.forms import AuthenticationForm
+from rest_framework.authtoken.models import Token
+from rest_framework import generics
 
 
-# ! Pagina de home, para el usuario que inicia sesion
+class PersonalList(generics.ListCreateAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = PerfilSerializer
 
 
-def home(request):
-    return render(request, 'home.html')
+class login(FormView):
+    template_name = 'login.html'
+    form_class = AuthenticationForm
+    success_url = reverse_lazy('api:persona_list')
 
-# ! Pagina de informacion, pagina para el usuario no registrado y no autenticado
+    @method_decorator(csrf_protect)
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return super(login, self).dispatch(request, *args, **kwargs)
 
-
-def about(request):
-    return render(request, 'about.html')
-
-#! Registrar usuario
-
-
-class UserRegistrationViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.AllowAny]
-
-    def create(self, request):
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "Usuario registrado exitosamente."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#! Login de usuario
-
-
-class UserLoginViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.AllowAny]
-
-    @action(detail=False, methods=['post'])
-    def login(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(
-                username=serializer.validated_data['username'],
-                password=serializer.validated_data['password']
-            )
-            if user:
-                login(request, user)
-                return Response({'message': 'Inicio de sesión exitoso'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-#! Logout de usuario
-class UserLogoutViewSet(viewsets.ViewSet):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-
-    @action(detail=False, methods=['post'])
-    def logout(self, request):
-        logout(request)
-        return Response({'message': 'Cierre de sesión exitoso'}, status=status.HTTP_200_OK)
+    def form_valid(self, form):
+        user = authenticate(
+            username=form.cleaned_data['username'], password=form.cleaned_data['password'])
+        token, _ = Token.objects.get_or_create(user=user)
+        if token:
+            login(self.request, form.get_user())
+            return super(login, self).form_valid(form)

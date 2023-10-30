@@ -1,8 +1,14 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User, Group
-from django.contrib.auth import authenticate
+from .models import Profile
 
 
+class PerfilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
+''' 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
@@ -46,3 +52,6 @@ class UserLoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+
+'''
