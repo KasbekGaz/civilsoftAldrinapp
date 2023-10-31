@@ -1,69 +1,63 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
-from .models import Profile
-from .forms import Usuario
-from django.contrib.auth import login, logout
-from django.db import IntegrityError
-from django.contrib.auth.decorators import login_required  # *para proteger las rutas
-# Create your views here.
+from django.shortcuts import render
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser, AllowAny
+from .models import Usuario
+from .serializers import UsuarioSerializer
+from .permissions import IsMemberOfGroup
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from rest_framework import generics
+
 
 # ! Pagina de home, para el usuario que inicia sesion
-
-
 def home(request):
     return render(request, 'home.html')
 
+
 # ! Pagina de informacion, pagina para el usuario no registrado y no autenticado
-
-
 def about(request):
     return render(request, 'about.html')
 
-# ! registro de usuario
-# * modififcado
+
+class UsuarioViewSet(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+    def get_permissions(self):
+        return [IsMemberOfGroup()]
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def registrar_usuario(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def new_usuario(request):
-    if request.method == 'GET':
-        return render(request, 'registro_Usuario.html', {
-            'form': Usuario()
-        })
-    elif request.method == 'POST':
-        form = Usuario(request.POST)
-        if form.is_valid():
-            try:
-                user = form.save()  # Esto crea un nuevo usuario y un perfil asociado
-                login(request, user)
-                return redirect('home')
-            except IntegrityError:
-                return render(request, 'registro_Usuario.html', {
-                    'form': form,
-                    'error': 'Usuario ya existe'
-                })
-    return render(request, 'registro_Usuario.html', {'form': Usuario()})
+#! registrar usuario
+class RegistroUsuarioView(generics.CreateAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+    permission_classes = [AllowAny]  # *Permite a cualquiera registrarse
 
 
-#! Autenticar e incio de sesion del usuario
-# * modificado
-def autenticar(request):
-    if request.method == 'GET':
-        return render(request, 'inicio_sesion.html', {
-            'form': AuthenticationForm()
-        })
-    elif request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('home')
-        return render(request, 'inicio_sesion.html', {
-            'form': form,
-            'error': 'Usuario o contraseña incorrecta'
-        })
+#! login
+class CustomObtainAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key, 'user_id': user.pk, 'username': user.username})
+
+#! logout
 
 
-#! Cerrar sesion usuario
-@login_required
-def closeSesion(request):
-    logout(request)
-    return redirect('home')
+class LogoutView(APIView):
+    def post(self, request):
+        request.auth.delete()  # Elimina el token de autenticación del usuario
+        return Response(status=status.HTTP_200_OK)
