@@ -54,7 +54,7 @@
                             </a>
                             <h3>Registrar Usuario</h3>
                         </div>
-                        <form method="post" actiion="{% url 'new_usuario' %}">
+                        <form method="post" action="{% url 'new_usuario' %}">
                             {% csrf_token %}
                             <div class="form-floating mb-3">
                                 <input type="text" class="form-control" id="floatingText" name="username" placeholder="jhondoe">
@@ -72,6 +72,13 @@
                                 <input type="password" class="form-control" id="floatingPassword" name="password2" placeholder="Password">
                                 <label for "floatingPassword">confirmar contraseña</label>
                             </div>
+                            <div class="form-floating mb-4">
+                                <select class="form-select" id="group" name="group">
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Consultor">Consultor</option>
+                                </select>
+                                <label for="group">Grupo</label>
+                            </div>
                             <div class="d-flex align-items-center justify-content-between mb-4">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="exampleCheck1">
@@ -81,7 +88,7 @@
                             </div>
                             <button type="submit" class="btn btn-primary py-3 w-100 mb-4">Registrarse</button>
                         </form>
-                        <p class="text-center mb-0">Tienes una cuenta? <a href="#">Iniciar Sesion</a></p>
+                        <p class="text-center mb-0">Tienes una cuenta? <a href="{% url "signin" %}">Iniciar Sesion</a></p>
                     </div>
                 </div>
             </div>

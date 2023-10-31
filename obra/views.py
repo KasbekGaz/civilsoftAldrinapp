@@ -5,6 +5,8 @@ from .forms import Usuario
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required  # *para proteger las rutas
+from django.http import HttpResponseForbidden
+from django.contrib.auth.models import Group
 # Create your views here.
 
 # ! Pagina de home, para el usuario que inicia sesion
@@ -23,24 +25,29 @@ def about(request):
 
 
 def new_usuario(request):
-    if request.method == 'GET':
-        return render(request, 'registro_Usuario.html', {
-            'form': Usuario
-        })
+    if request.method == 'POST':
+        form = Usuario(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Obtén el grupo seleccionado
+            group_name = request.POST.get('group')
+            if group_name == 'Administrador':
+                # Obtén el grupo "Administrador"
+                admin_group = Group.objects.get(name='Administrador')
+                user.groups.add(admin_group)
+            elif group_name == 'Consultor':
+                consultor_group = Group.objects.get(
+                    name='Consultor')  # Obtén el grupo "Consultor"
+                user.groups.add(consultor_group)
+            login(request, user)
+            return redirect('home')
+        else:
+            # Manejar errores de validación del formulario
+            # Puedes mostrar mensajes de error en el formulario
+            return render(request, 'registro_Usuario.html', {'form': form})
     else:
-        if request.POST['password1'] == request.POST['password2']:
-            try:  # * Aqui se registra el usuario
-                user = User.objects.create_user(
-                    username=request.POST['username'], password=request.POST['password1'])
-                user.save()
-                login(request, user)
-                return redirect('home')
-            except IntegrityError:
-                return render(request, 'registro_Usuario.html', {
-                    'form': Usuario,
-                    'error': 'Usuario no existe'
-                })
-        return render(request, 'registro_Usuario.html')
+        form = Usuario()
+    return render(request, 'registro_Usuario.html', {'form': form})
 
 
 #! Autenticar e incio de sesion del usuario
