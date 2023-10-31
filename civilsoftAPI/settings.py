@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-#* El import os acceso a funcionalidades útiles para interactuar con el sistema operativo y el entorno en el que se ejecuta tu aplicación.
+# * El import os acceso a funcionalidades útiles para interactuar con el sistema operativo y el entorno en el que se ejecuta tu aplicación.
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'obra',
 ]
 

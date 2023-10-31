@@ -1,34 +1,31 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import User, Group
-from django.db.models.signals import post_save
-# Create your models here.
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='profile', verbose_name='Usuario')
+class CustomUser(AbstractUser):
+    ROLES = (
+        ('Administrador', 'Administrador'),
+        ('Consultor', 'Consultor'),
+    )
+
+    nombre_completo = models.CharField(max_length=255)
+    telefono = models.CharField(max_length=15)
+    correo = models.EmailField(unique=True)
+    rol = models.CharField(max_length=20, choices=ROLES)
+    # Define un related_name personalizado para evitar conflictos
     groups = models.ManyToManyField(
-        Group, blank=True, verbose_name='Grupos del Usuario')
-    correo = models.CharField(
-        max_length=150, null=True, blank=True, verbose_name='Correo Electronico')
+        'auth.Group',
+        related_name='custom_users',
+        blank=True,
+        verbose_name='Groups'
+    )
 
-    class Meta:
-        verbose_name = 'Perfil'
-        verbose_name_plural = 'Perfiles'
-        ordering = ['-id']
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_users',
+        blank=True,
+        verbose_name='User permissions'
+    )
 
     def __str__(self):
-        return self.user.username
-
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
-post_save.connect(create_user_profile, sender=User)
-post_save.connect(save_user_profile, sender=User)
+        return self.username

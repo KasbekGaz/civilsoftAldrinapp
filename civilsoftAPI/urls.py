@@ -16,16 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from obra import views
+from obra.views import (
+    UserRegistrationView,
+    UserLoginView,
+    UserLogoutView,
+    UserListView,
+    UserDetailView
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('welcome/',views.welcome, name='welcome'),
-    #! ruta de la vista general
-    path('', views.home, name='home'),
-    #!Rutas del usuario
-    path('signup/', views.new_usuario, name='new_usuario'),
-    path('signin/', views.autenticar, name='signin'),
-    path('logout/', views.closeSesion, name='logout'),
-    path('about/', views.about, name='info'),
+    path('register/', UserRegistrationView.as_view(), name='user-registration'),
+    path('login/', UserLoginView.as_view(), name='user-login'),
+    path('logout/', UserLogoutView.as_view(), name='user-logout'),
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 ]

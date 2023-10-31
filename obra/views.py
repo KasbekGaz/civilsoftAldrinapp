@@ -1,69 +1,66 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
-from .models import Profile
-from .forms import Usuario
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout
-from django.db import IntegrityError
-from django.contrib.auth.decorators import login_required  # *para proteger las rutas
-# Create your views here.
+from django.shortcuts import get_object_or_404
 
-# ! Pagina de home, para el usuario que inicia sesion
-
-
-def home(request):
-    return render(request, 'home.html')
-
-# ! Pagina de informacion, pagina para el usuario no registrado y no autenticado
+from .models import CustomUser
+from .serializers import CustomUserSerializer
+from .permissions import IsAdminUser, IsConsultorUser
 
 
-def about(request):
-    return render(request, 'about.html')
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.AllowAny]
 
-# ! registro de usuario
-# * modififcado
-
-
-def new_usuario(request):
-    if request.method == 'GET':
-        return render(request, 'registro_Usuario.html', {
-            'form': Usuario()
-        })
-    elif request.method == 'POST':
-        form = Usuario(request.POST)
-        if form.is_valid():
-            try:
-                user = form.save()  # Esto crea un nuevo usuario y un perfil asociado
-                login(request, user)
-                return redirect('home')
-            except IntegrityError:
-                return render(request, 'registro_Usuario.html', {
-                    'form': form,
-                    'error': 'Usuario ya existe'
-                })
-    return render(request, 'registro_Usuario.html', {'form': Usuario()})
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.set_password(serializer.validated_data['password'])
+        user.save()
 
 
-#! Autenticar e incio de sesion del usuario
-# * modificado
-def autenticar(request):
-    if request.method == 'GET':
-        return render(request, 'inicio_sesion.html', {
-            'form': AuthenticationForm()
-        })
-    elif request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
+class UserLoginView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        user = get_object_or_404(CustomUser, correo=request.data.get('correo'))
+        if user.check_password(request.data.get('password')):
             login(request, user)
-            return redirect('home')
-        return render(request, 'inicio_sesion.html', {
-            'form': form,
-            'error': 'Usuario o contraseña incorrecta'
-        })
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key})
+        return Response({'error': 'Credenciales inválidas'}, status=401)
 
 
-#! Cerrar sesion usuario
-@login_required
-def closeSesion(request):
-    logout(request)
-    return redirect('home')
+class UserLogoutView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        logout(request)
+        return Response(status=204)
+
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+
+    def get_permissions(self):
+        if self.request.user.rol == 'Consultor':
+            return [IsConsultorUser()]
+        elif self.request.user.rol == 'Administrador':
+            return [IsAdminUser()]
+        return []
+
+
+class UserListView(generics.ListCreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+
+    def get_permissions(self):
+        if self.request.user.rol == 'Consultor':
+            return [IsConsultorUser()]
+        elif self.request.user.rol == 'Administrador':
+            return [IsAdminUser()]
+        return []
