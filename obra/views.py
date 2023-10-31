@@ -2,10 +2,9 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout
-from django.shortcuts import get_object_or_404
-
+from rest_framework import status
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, LoginSerializer
 from .permissions import IsAdminUser, IsConsultorUser
 
 
@@ -21,17 +20,16 @@ class UserRegistrationView(generics.CreateAPIView):
 
 
 class UserLoginView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
 
     def post(self, request):
-        user = get_object_or_404(CustomUser, correo=request.data.get('correo'))
-        if user.check_password(request.data.get('password')):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key})
-        return Response({'error': 'Credenciales inválidas'}, status=401)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogoutView(generics.DestroyAPIView):
