@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 class Profile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='profile', verbose_name='Usuario')
+    nombre_completo = models.CharField(max_length=100, null=True)
     groups = models.ManyToManyField(
         Group, blank=True, verbose_name='Grupos del Usuario')
     correo = models.CharField(
