@@ -20,10 +20,6 @@ from obra import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('welcome/',views.welcome, name='welcome'),
-    #! ruta de la vista general
-    path('', views.home, name='home'),
-    path('about/', views.about, name='info'),
     #! ruta de usuarios
     path('api/', include('obra.urls')),
 
