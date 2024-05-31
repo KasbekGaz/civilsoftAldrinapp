@@ -6,7 +6,11 @@ const Table = ({ data }) => {
     /*Este componente de tabla recibe un prop llamado data, que es un array de objetos. Cada objeto representa una fila de la tabla, y las claves del objeto corresponden a las columnas. */
 
   return (
-    <table className="min-w-full border border-gray-300">
+<div>
+  <h1>
+    Esto es una tabla de datos con estilos minimos.
+  </h1>
+      <table className="min-w-full border border-gray-300">
       <thead>
         <tr>
           <th className="border border-gray-300 py-2 px-4">ID</th>
@@ -33,6 +37,7 @@ const Table = ({ data }) => {
         ))}
       </tbody>
     </table>
+</div>
   );
 };
 
